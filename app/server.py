@@ -10,6 +10,7 @@ from app.tools.exchange_rate import get_exchange_rate
 from app.tools.github import get_github_issues
 from app.tools.hackernews import search_hackernews
 from app.tools.reddit import search_reddit_news
+from app.tools.retrieval_tool.retrieval_tool import retrieve_agroz_info
 
 DISABLE_AUTH = os.environ.get("DISABLE_AUTH", "").lower() in ("true", "1")
 
@@ -61,6 +62,7 @@ TOOLS = [
     get_github_issues,
     get_exchange_rate,
     search_reddit_news,
+    retrieve_agroz_info,
 ]
 
 for tool_ in TOOLS:
