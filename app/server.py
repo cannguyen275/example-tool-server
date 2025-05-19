@@ -2,7 +2,7 @@
 
 import hmac
 import os
-
+import pandas as pd
 from langchain_core.tools import tool
 from universal_tool_server import Server, Auth
 
@@ -11,6 +11,7 @@ from app.tools.github import get_github_issues
 from app.tools.hackernews import search_hackernews
 from app.tools.reddit import search_reddit_news
 from app.tools.retrieval_tool.retrieval_tool import retrieve_agroz_info
+from langchain_core.tools import ToolException
 
 DISABLE_AUTH = os.environ.get("DISABLE_AUTH", "").lower() in ("true", "1")
 
@@ -53,6 +54,31 @@ async def get_weather(city: str) -> str:
     """Get the weather for a city."""
     return f"The weather in {city} is nice today with a high of 75°F."
 
+@tool()
+async def save_report(report_time: str, chat_history: str, summary_report: str, incident_type: str) -> str:
+    """To save incident report provided by user, must use this tool."""
+    try:
+        new_row = {
+            'Report Time': report_time,
+            'Store Report': chat_history,
+            'Report summary': summary_report,
+            "Type of incident": incident_type
+        }
+        new_df_data = pd.DataFrame([new_row])
+
+        file_path = 'user_reports.xlsx'
+        if os.path.isfile(file_path):
+            df = pd.read_excel(file_path)
+            df = pd.concat([df, new_df_data], ignore_index=True)
+        else:
+            df = new_df_data
+        # Save the updated DataFrame to the Excel file
+        df.to_excel('user_reports.xlsx', index=False)
+
+        return "Thanks for your information. The record is saved successfully\n"
+    except Exception as e:
+        raise ToolException(f"Error appending user reports to Excel file: {e}\n")
+        # return f"Error appending user reports to Excel file: {e}"
 
 app.add_tool(get_weather)
 
@@ -63,6 +89,7 @@ TOOLS = [
     get_exchange_rate,
     search_reddit_news,
     retrieve_agroz_info,
+    save_report
 ]
 
 for tool_ in TOOLS:
